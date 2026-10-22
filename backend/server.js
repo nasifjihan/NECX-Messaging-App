@@ -11,19 +11,24 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
 const DATA_FILE = path.join(__dirname, "data.json");
+const UPLOADS_DIR = path.join(__dirname, "uploads");
+const DIST_DIR = path.join(__dirname, "..", "frontend", "dist");
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
-const upload = multer({ dest: "uploads/" }); // Temp dir for imports
+const upload = multer({ dest: UPLOADS_DIR }); // Temp dir for imports
 
 // Initialize data file if not exists
 if (!fs.existsSync(DATA_FILE)) {
   fs.writeFileSync(DATA_FILE, JSON.stringify({ personas: [], messages: [] }));
+}
+if (!fs.existsSync(UPLOADS_DIR)) {
+  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 }
 
 // Load data
@@ -140,6 +145,15 @@ app.post("/api/import", upload.single("file"), (req, res) => {
     res.status(400).json({ error: "Invalid JSON" });
   }
 });
+
+// Serve built frontend (production single-service deploy)
+if (fs.existsSync(DIST_DIR)) {
+  app.use(express.static(DIST_DIR));
+  app.get("*", (req, res, next) => {
+    if (req.path.startsWith("/api")) return next();
+    res.sendFile(path.join(DIST_DIR, "index.html"));
+  });
+}
 
 // Error handling for unknown routes
 app.use((req, res) => {

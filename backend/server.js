@@ -54,7 +54,7 @@ app.post("/api/personas", (req, res) => {
     return res.status(400).json({ error: "Invalid name" });
   }
   const data = loadData();
-  const newPersona = { id: uuid.v4(), name: name.trim() };
+  const newPersona = { id: uuid(), name: name.trim() };
   data.personas.push(newPersona);
   saveData(data);
   res.status(201).json(newPersona);
@@ -81,7 +81,7 @@ app.post("/api/messages", (req, res) => {
     return res.status(400).json({ error: "Persona not found" });
   }
   const newMessage = {
-    id: uuid.v4(),
+    id: uuid(),
     senderId,
     text: text.trim(),
     timestamp: Date.now(),
